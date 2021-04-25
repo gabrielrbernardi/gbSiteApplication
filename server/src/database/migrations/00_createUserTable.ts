@@ -3,10 +3,15 @@ import knex from 'knex';
 export async function up(knex: knex){
     return knex.schema.createTable('Usuario', table => {
         table.increments('IdUsuario').primary();
-        table.string('Usuario');
-        table.string('Senha');
+        table.string('Usuario').notNullable();
+        table.string('Senha').notNullable();
+        table.string('Nome').notNullable();
+        table.string('Email');
+        table.string('DataNascimento');
+        table.string('TelefonePrimario');
+        table.string('TelefoneSecondario');
         table.dateTime('UltimoAcesso', {precision: 6}).nullable;
-        table.dateTime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'));
+        table.date('DataCriacao').notNullable();
     })
 }
 
