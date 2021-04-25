@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import knex from "../../database/connection";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 const saltRounds = 10;                                                      //Quantidade de saltos que será utilizado para o hash da senha
 
@@ -9,9 +8,13 @@ const secretWord = "PalavraSecreta";
 
 class User{
     async create(request:Request, response:Response){
-        const {username, password, confirmPassword} = request.body;         //Atribuicao valor de usuario e senha vindos do frontend
+        const {username, password, confirmPassword, name} = request.body;         //Atribuicao valor de usuario e senha vindos do frontend
+        const Email = request.body.email || null;
+        const DataNascimento = request.body.dataNascimento || null;
+        const TelefonePrimario = request.body.telefonePrimario || null;
+        const TelefoneSecondario = request.body.telefoneSecondario || null;
         
-        if(!username || !password || !confirmPassword){                     //Verifica se username, password e confirmPassword sao validos
+        if(!username || !password || !confirmPassword || !name){                     //Verifica se username, password e confirmPassword sao validos
             return response.status(401).json({createdUser: false, error: "Preencha todos os campos!"});
         }
         if(password != confirmPassword){
@@ -21,22 +24,38 @@ class User{
         if(password.length < 6){
             return response.status(401).json({createdUser: false, error: "Quantidade mínima de caracteres: 6. Tente novamente."});
         }
+        if(Email.indexOf("@") == -1 || Email.indexOf(".") == -1){
+            return response.status(401).json({createdUser: false, error: "Formato de e-mail incorreto. Tente novamente."});
+        }
 
         const userDB = await knex("Usuario").where("Usuario", username);    //Verificacao se existe outro usuario com o mesmo nome
         const user = userDB[0];
+        var dataCriacao = new Date().toISOString().split("T");
+        dataCriacao[1] = dataCriacao[1].split(".")[0];
+        var newData = dataCriacao[0].split("-")
+        var dataCriacaoFormated = newData[2] + "/" + newData[1] + "/" + newData[0] + " " + dataCriacao[1];
+        
         if(!user){
             await bcrypt.hash(password, saltRounds, function(err, hash) {
                 const user = {
                     Usuario: username,
                     Senha: hash,
+                    Nome: name,
+                    Email,
+                    DataNascimento,
+                    TelefonePrimario,
+                    TelefoneSecondario,
+                    DataCriacao: dataCriacaoFormated
                 };
                 knex("Usuario").insert(user).then(users => {
                     const userId = users[0];
                     return response.status(200).json({
                         createdUser: true,
                         id: userId,
-                        Usuario: username
+                        // Usuario: username
                     })
+                }).catch(err => {
+                    return response.status(401).json({createdUser: false, error: "Erro na inserção dos valores. Verifique os dados e tente novamente." + " Error Type: " + err.code});
                 })
             });
         }else{
@@ -46,15 +65,16 @@ class User{
 
     async index(request:Request, response:Response){
         const users = await knex("Usuario").select("*");
-        var serializedUsers = users.map(userDB => {
-            return {
-                IdUsuario: userDB.IdUsuario,
-                Usuario: userDB.Usuario,
-                UltimoAcesso: userDB.UltimoAcesso,
-                // Senha: userDB.Senha
-            }
-        })
-        return response.json({foundUsers: true, users: serializedUsers});
+        // var serializedUsers = users.map(userDB => {
+        //     return {
+        //         IdUsuario: userDB.IdUsuario,
+        //         Usuario: userDB.Usuario,
+        //         UltimoAcesso: userDB.UltimoAcesso,
+        //         // Senha: userDB.Senha
+        //     }
+        // })
+        // return response.json({foundUsers: true, users: serializedUsers});
+        return response.json({foundUsers: true, users: users});
     }
 
     async indexPaginate(request: Request, response: Response){
@@ -69,6 +89,12 @@ class User{
                     return {
                         IdUsuario: userDB.IdUsuario,
                         Usuario: userDB.Usuario,
+                        Nome: userDB.Nome,
+                        Email: userDB.Email,
+                        DataNascimento: userDB.DataNascimento,
+                        TelefonePrimario: userDB.TelefonePrimario,
+                        TelefoneSecondario: userDB.TelefoneSecondario,
+                        DataCriacao: userDB.DataCriacao,
                         UltimoAcesso: userDB.UltimoAcesso,
                     }
                 })
@@ -80,7 +106,7 @@ class User{
             } else {
                 return response.json({
                     userFound: false,
-                    error: "Usuários não encontrados. Verifique o id e tente novamente.",
+                    error: "Usuários não encontrados. Verifique a página e tente novamente.",
                 });
             }
             // return response.json({ showUsers: true, users: users, length: usersLength });
