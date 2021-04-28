@@ -191,17 +191,17 @@ class User{
         const {id} = request.params;                            //Recebe id do usuario
         const {requestId} = request.params;
         const idInt = parseInt(id);
-        const requestIdInt = parseInt(requestId);
+        const requesterIdInt = parseInt(requestId);
         const userDB = await knex("Usuario").where("IdUsuario", idInt);     //Verifica se existe usuario no DB
         const user = userDB[0];
-        if(requestIdInt === idInt){
+        if(requesterIdInt === idInt){
             return response.status(405).json({deletedUser: false, error: "Não é possível excluir o próprio usuário"});
         }
         if(user){
             await knex("Usuario").where("IdUsuario", idInt).del();
             return response.status(200).json({deletedUser: true});
         }else{
-        return response.status(404).json({deletedUser: false, error: "Usuário não encontrado."});
+            return response.status(404).json({deletedUser: false, error: "Usuário não encontrado."});
         }
     }
 }

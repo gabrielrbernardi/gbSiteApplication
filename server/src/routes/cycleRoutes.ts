@@ -6,13 +6,9 @@ const routes = express.Router();
 const cycle = new Cycle();
 
 routes.post("/cycle", cycle.create);
-routes.get("/cycle/paginate/:page", cycle.indexPaginate);
-// routes.post("/clients", client.create);
-// routes.get("/clients", client.index);
-// routes.get("/clients/:id", client.showClient);
-// routes.get("/clients/paginate/:page", client.indexPaginate);
-// routes.put("/clients/:id", client.update);
-// routes.put("/clients/validity/:id", client.updateValidity);
-// routes.delete("/clients/:id", client.delete);
+routes.get("/cycles/paginate/:page", cycle.indexPaginate);
+routes.get("/cycles", cycle.index);
+routes.put("/cycle/:id", cycle.update);
+routes.delete("/cycle/:id", cycle.delete);
 
 export default routes;
