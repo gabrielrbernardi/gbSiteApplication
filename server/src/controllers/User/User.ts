@@ -15,17 +15,19 @@ class User{
         const TelefoneSecondario = request.body.telefoneSecondario || null;
         
         if(!username || !password || !confirmPassword || !name){                     //Verifica se username, password e confirmPassword sao validos
-            return response.status(401).json({createdUser: false, error: "Preencha todos os campos!"});
+            return response.status(400).json({createdUser: false, error: "Preencha todos os campos!"});
         }
         if(password != confirmPassword){
-            return response.status(401).json({createdUser: false, error: "Senhas diferentes. Tente novamente."});
+            return response.status(400).json({createdUser: false, error: "Senhas diferentes. Tente novamente."});
         }
         
         if(password.length < 6){
-            return response.status(401).json({createdUser: false, error: "Quantidade mínima de caracteres: 6. Tente novamente."});
+            return response.status(400).json({createdUser: false, error: "Quantidade mínima de caracteres: 6. Tente novamente."});
         }
-        if(Email.indexOf("@") == -1 || Email.indexOf(".") == -1){
-            return response.status(401).json({createdUser: false, error: "Formato de e-mail incorreto. Tente novamente."});
+        if(Email){
+            if(Email.indexOf("@") == -1 || Email.indexOf(".") == -1){
+                return response.status(400).json({createdUser: false, error: "Formato de e-mail incorreto. Tente novamente."});
+            }
         }
 
         const userDB = await knex("Usuario").where("Usuario", username);    //Verificacao se existe outro usuario com o mesmo nome
@@ -55,7 +57,7 @@ class User{
                         // Usuario: username
                     })
                 }).catch(err => {
-                    return response.status(401).json({createdUser: false, error: "Erro na inserção dos valores. Verifique os dados e tente novamente." + " Error Type: " + err.code});
+                    return response.status(400).json({createdUser: false, error: "Erro na inserção dos valores. Verifique os dados e tente novamente." + " Error Type: " + err.code});
                 })
             });
         }else{
@@ -74,7 +76,7 @@ class User{
         //     }
         // })
         // return response.json({foundUsers: true, users: serializedUsers});
-        return response.json({foundUsers: true, users: users});
+        return response.status(200).json({foundUsers: true, users: users});
     }
 
     async indexPaginate(request: Request, response: Response){
@@ -98,20 +100,70 @@ class User{
                         UltimoAcesso: userDB.UltimoAcesso,
                     }
                 })
-                return response.json({
+                return response.status(200).json({
                     showUsers: true,
                     users: serializedUsers,
                     length: usersLength,
                 });
             } else {
-                return response.json({
-                    userFound: false,
+                return response.status(404).json({
+                    showUsers: false,
                     error: "Usuários não encontrados. Verifique a página e tente novamente.",
                 });
             }
             // return response.json({ showUsers: true, users: users, length: usersLength });
         } catch (err) {
-            return response.json({ showUsers: false, error: err });
+            return response.status(400).json({ showUsers: false, error: err });
+        }
+    }
+
+    async showId(request: Request, response: Response){
+        const { id } = request.params;
+        var page = String(request.params.page);
+        if (!page) {
+            page = "10";
+        }
+        var pageRequest = parseInt(page) / 10;
+        const rows = 10;
+        try{
+            if(id){
+                const userDB = await knex("Usuario").where('IdUsuario', 'like', `%${id}%`).offset((pageRequest - 1) * rows).limit(rows);
+                const user = userDB[0];
+                if (user) {
+                    const usersLength = (await knex("Usuario").count('IdUsuario').where('IdUsuario', 'like', `%${id}%`));
+                    var serializedUsers = userDB.map(userDB => {
+                        return {
+                            IdUsuario: userDB.IdUsuario,
+                            Usuario: userDB.Usuario,
+                            Nome: userDB.Nome,
+                            Email: userDB.Email,
+                            DataNascimento: userDB.DataNascimento,
+                            TelefonePrimario: userDB.TelefonePrimario,
+                            TelefoneSecondario: userDB.TelefoneSecondario,
+                            DataCriacao: userDB.DataCriacao,
+                            UltimoAcesso: userDB.UltimoAcesso,
+                        }
+                    })
+                    return response.status(200).json({
+                        showUsers: true,
+                        users: serializedUsers,
+                        length: usersLength,
+                        length1: userDB.length
+                    });
+                } else {
+                    return response.status(404).json({
+                        showUsers: false,
+                        error: "Usuário(s) não encontrado(s). Verifique o id e tente novamente.",
+                    });
+                }
+            }else{
+                return response.status(400).json({
+                    showUsers: false,
+                    error: "Id não fornecido. Verifique e tente novamente.",
+                });
+            }
+        } catch (err) {
+            return response.status(400).json({ showUsers: false, error: err });
         }
     }
 
@@ -119,16 +171,19 @@ class User{
         const {id} = request.params;                            //Recebe id do usuario
         const {password, confirmPassword} = request.body;
         const idInt = parseInt(id);
+        if(!password || !confirmPassword){
+            return response.status(400).json({updatedUser: false, error: "Preencha todos os campos."});
+        }
         if(password === confirmPassword){                       //Verifica se as senhas informadas são iguais
             await bcrypt.hash(password, saltRounds, function(err, hash) {   //Efetua novamente o hash da senha
                 knex("Usuario").where("IdUsuario", idInt).update({          //Atualiza o valor da senha no DB
                     Senha: hash
                 }).then(() => {
-                    return response.json({updatedUser: true, hash})
+                    return response.status(200).json({updatedUser: true, hash})
                 })
             });
         }else{
-            return response.json({updatedUser: false, error: "Senhas não correspondentes."})
+            return response.status(400).json({updatedUser: false, error: "Senhas não correspondentes."})
         }
 
     }
@@ -144,9 +199,9 @@ class User{
         }
         if(user){
             await knex("Usuario").where("IdUsuario", idInt).del();
-            return response.json({deletedUser: true});
+            return response.status(200).json({deletedUser: true});
         }else{
-        return response.json({deletedUser: false, error: "Usuário não encontrado."});
+        return response.status(404).json({deletedUser: false, error: "Usuário não encontrado."});
         }
     }
 }

@@ -10,6 +10,7 @@ const userSession = new UserSession();
 routes.post("/users", user.create);
 routes.get("/users", user.index);
 routes.get("/users/paginate/:page", user.indexPaginate);
+routes.get("/users/:id/:page", user.showId);
 routes.put("/users/:id", user.update);
 routes.delete("/users/:id/:requestId", user.delete);
 

@@ -1,10 +1,12 @@
 import express from "express";
 import UserRoutes from './routes/userRoutes';
-import ClientRoutes from './routes/clientRoutes';
+import TeamRoutes from './routes/teamRoutes';
+import CycleRoutes from './routes/cycleRoutes';
 
 const app = express();
 
 app.use(UserRoutes);
-// app.use(ClientRoutes);
+app.use(TeamRoutes);
+app.use(CycleRoutes);
 
 export default app;
