@@ -54,16 +54,23 @@ class Cycle{
             const cyclesLength = (await knex("Ciclo").select("*")).length;
             if (cycles) {
                 var serializedCycles = cycles.map(cycleDB => {
+                    // knex("Turma").where("IdCiclo", cycleDB.IdCiclo).count("IdCiclo").then(teamsLength => {
+                    // });
                     return {
                         IdCiclo: cycleDB.IdCiclo,
                         Ciclo: cycleDB.Ciclo + "º Ciclo",
                         Ano: cycleDB.Ano,
                         DataCriacao: cycleDB.DataCriacao,
+                        QuantidadeTurmas: 0
                     }
                 })
+                for(var i = 0; i < serializedCycles.length; i++){
+                    const teamsLength = (await knex("Turma").count("IdCiclo").where("IdCiclo", serializedCycles[i].IdCiclo));
+                    serializedCycles[i].QuantidadeTurmas = Number(teamsLength[0]['count(`IdCiclo`)'])
+                }
                 return response.status(200).json({
                     showCycle: true,
-                    users: serializedCycles,
+                    cycles: serializedCycles,
                     length: cyclesLength,
                 });
             } else {

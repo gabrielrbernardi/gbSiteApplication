@@ -185,8 +185,8 @@ class User{
         }else{
             return response.status(400).json({updatedUser: false, error: "Senhas não correspondentes."})
         }
-
     }
+    
     async delete(request:Request, response:Response){
         const {id} = request.params;                            //Recebe id do usuario
         const {requestId} = request.params;

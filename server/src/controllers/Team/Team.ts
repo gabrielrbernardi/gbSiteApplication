@@ -4,30 +4,47 @@ import knex from "../../database/connection";
 class Team{
     async create(request:Request, response:Response){
         const {nome, periodo} = request.body;
+        const idCiclo = request.params.idCycle;
         if(!nome || !periodo){
             return response.status(400).json({createdTeam: false, error: "Preecha todos os campos. Verifique e tente novamente."});
         }
         if(periodo != "M" && periodo != "T"){
             return response.status(400).json({createdTeam: false, error: "Formato de período inválido. Verifique e tente novamente."});
         }
-
-        var dataCriacao = new Date().toISOString().split("T");
-        dataCriacao[1] = dataCriacao[1].split(".")[0];
-        var newData = dataCriacao[0].split("-")
-        var dataCriacaoFormated = newData[2] + "/" + newData[1] + "/" + newData[0] + " " + dataCriacao[1];
-
-        const team = {
-            NomeTurma: nome,
-            Periodo: periodo,
-            DataCriacao: dataCriacaoFormated
+        if(!idCiclo){
+            return response.status(400).json({createdTeam: false, error: "Id do ciclo não fornecido. Tente novamente."});
         }
-        await knex("Turma").insert(team).then(teamDB => {
-            return response.status(200).json({createdTeam: true, teamId: teamDB[0]});
-        }).catch(err => {
+
+        try{
+            await knex("Ciclo").where("IdCiclo", idCiclo).then(cycleDB => {
+                if(!cycleDB[0]){
+                    return response.status(400).json({createdTeam: false, error: `Não foi possível encontrar um ciclo com id = ${idCiclo}.`});
+                }else{
+                    var dataCriacao = new Date().toISOString().split("T");
+                    dataCriacao[1] = dataCriacao[1].split(".")[0];
+                    var newData = dataCriacao[0].split("-")
+                    var dataCriacaoFormated = newData[2] + "/" + newData[1] + "/" + newData[0] + " " + dataCriacao[1];
+            
+                    const team = {
+                        NomeTurma: nome,
+                        Periodo: periodo,
+                        DataCriacao: dataCriacaoFormated,
+                        IdCiclo: idCiclo
+                    }
+                    knex("Turma").insert(team).then(teamDB => {
+                        return response.status(200).json({createdTeam: true, teamId: teamDB[0]});
+                    }).catch(err => {
+                        console.log(err)
+                        return response.status(400).json({createdTeam: false, error: err});
+                    })
+                }
+            }).catch(err => {
+                return response.status(400).json({createdTeam: false, error: err});
+            })
+        }catch(err){
             console.log(err)
             return response.status(400).json({createdTeam: false, error: err});
-        })
-        // return response.status(200).json({createdTeam: true});
+        }
     }
 
     async indexPaginate(request: Request, response: Response){
@@ -38,17 +55,23 @@ class Team{
             const teams = await knex("Turma").select("*").offset((pageRequest - 1) * rows).limit(rows);
             const teamsLength = (await knex("Turma").select("*")).length;
             if (teams) {
-                var serializedTeam = teams.map(teamDB => {
+                var serializedTeams = teams.map(teamDB => {
                     return {
                         IdTurma: teamDB.IdTurma,
                         Nome: teamDB.NomeTurma,
                         Periodo: teamDB.Periodo,
-                        DataCriacao: teamDB.DataCriacao
+                        DataCriacao: teamDB.DataCriacao,
+                        IdCiclo: teamDB.IdCiclo,
+                        QuantidadeAulas: 0
                     }
                 })
+                for(var i = 0; i < serializedTeams.length; i++){
+                    const lessonLength = (await knex("Aula").count("IdTurma").where("IdTurma", serializedTeams[i].IdTurma));
+                    serializedTeams[i].QuantidadeAulas = Number(lessonLength[0]['count(`IdTurma`)'])
+                }
                 return response.status(200).json({
                     showTeams: true,
-                    teams: serializedTeam,
+                    teams: serializedTeams,
                     length: teamsLength,
                 });
             } else {
@@ -57,7 +80,6 @@ class Team{
                     error: "Turmas não encontradas. Verifique a página e tente novamente.",
                 });
             }
-            // return response.json({ showUsers: true, users: users, length: usersLength });
         } catch (err) {
             return response.status(400).json({ showTeams: false, error: err });
         }

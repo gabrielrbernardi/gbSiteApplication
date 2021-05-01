@@ -5,7 +5,8 @@ export async function up(knex: knex){
         table.increments('IdTurma').primary();
         table.string("NomeTurma").notNullable();
         table.enum("Periodo", ["M", "T"]); //Manha ou tarde
-        
+        table.integer("IdCiclo").references("IdCiclo").inTable("Ciclo").unsigned().notNullable();
+
         table.date('DataCriacao').notNullable();
     })
 }
