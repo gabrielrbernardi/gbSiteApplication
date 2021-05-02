@@ -6,6 +6,7 @@ export async function up(knex: knex){
         table.string("NomeTurma").notNullable();
         table.enum("Periodo", ["M", "T"]); //Manha ou tarde
         table.integer("IdCiclo").references("IdCiclo").inTable("Ciclo").unsigned().notNullable();
+        table.integer("IdUsuario").references("IdUsuario").inTable("Usuario").unsigned().notNullable();
 
         table.date('DataCriacao').notNullable();
     })

@@ -4,15 +4,18 @@ import knex from "../../database/connection";
 class Lesson{
     async create(request: Request, response: Response){
         const {titulo} = request.body;
-        const idTurma = request.params.idTeam;
+        const idTurma = request.params.teamId;
+        const idUsuario = request.params.userId;
+
         const Descricao:string = request.body.descricao || null;
         if(!titulo){
             return response.status(400).json({createdLesson: false, error: "Titulo não fornecido. Tente novamente."});
         }
-        if(!idTurma){
-            return response.status(400).json({createdLesson: false, error: "Id da aula não fornecido. Não foi possível criar a aula. Tente novamente."});
+        if(!idTurma || !idUsuario){
+            return response.status(400).json({createdLesson: false, error: "Id do usuário ou Id da turma não fornecido(s). Não foi possível criar a aula. Tente novamente."});
         }
         try{
+            const idUsuarioInt = parseInt(idUsuario);
             await knex("Turma").where("IdTurma", idTurma).then(teamDB => {
                 if(!teamDB[0]){
                     return response.status(400).json({createdLesson: false, error: `Não foi possível encontrar uma turma com id = ${idTurma}`});
@@ -26,7 +29,8 @@ class Lesson{
                         DescricaoAula: Descricao,
                         Status: "F",
                         DataCriacao: dataCriacaoFormated,
-                        IdTurma: idTurma
+                        IdTurma: idTurma,
+                        IdUsuario: idUsuarioInt
                     }
                     knex("Aula").insert(lesson).then(lessonDB => {
                         return response.status(200).json({createdLesson: true, lessons: lessonDB});
@@ -61,6 +65,7 @@ class Lesson{
                         DataCriacao: lessonDB.DataCriacao,
                         DataStatus: lessonDB.DataStatus,
                         IdTurma: lessonDB.IdTurma,
+                        IdUsuario: lessonDB.IdUsuario
                     }
                 })
                 return response.status(200).json({

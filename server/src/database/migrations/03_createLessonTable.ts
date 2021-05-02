@@ -7,6 +7,7 @@ export async function up(knex: knex){
         table.string("DescricaoAula");
         table.enum("Status", ["A", "F"]);   //Aula aberta ou fechada
         table.integer("IdTurma").references("IdTurma").inTable("Turma").unsigned().notNullable();
+        table.integer("IdUsuario").references("IdUsuario").inTable("Usuario").unsigned().notNullable();
         
         table.date('DataCriacao').notNullable();
         table.date("DataStatus");
