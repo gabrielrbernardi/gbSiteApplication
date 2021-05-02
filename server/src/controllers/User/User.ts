@@ -43,6 +43,7 @@ class User{
                     Usuario: username,
                     Senha: hash,
                     Nome: name,
+                    TipoUsuario: "AL",
                     Email,
                     DataNascimento,
                     TelefonePrimario,
@@ -67,15 +68,6 @@ class User{
 
     async index(request:Request, response:Response){
         const users = await knex("Usuario").select("*");
-        // var serializedUsers = users.map(userDB => {
-        //     return {
-        //         IdUsuario: userDB.IdUsuario,
-        //         Usuario: userDB.Usuario,
-        //         UltimoAcesso: userDB.UltimoAcesso,
-        //         // Senha: userDB.Senha
-        //     }
-        // })
-        // return response.json({foundUsers: true, users: serializedUsers});
         return response.status(200).json({foundUsers: true, users: users});
     }
 
@@ -92,6 +84,7 @@ class User{
                         IdUsuario: userDB.IdUsuario,
                         Usuario: userDB.Usuario,
                         Nome: userDB.Nome,
+                        TipoUsuario: userDB.TipoUsuario,
                         Email: userDB.Email,
                         DataNascimento: userDB.DataNascimento,
                         TelefonePrimario: userDB.TelefonePrimario,
@@ -136,6 +129,7 @@ class User{
                             IdUsuario: userDB.IdUsuario,
                             Usuario: userDB.Usuario,
                             Nome: userDB.Nome,
+                            TipoUsuario: userDB.TipoUsuario,
                             Email: userDB.Email,
                             DataNascimento: userDB.DataNascimento,
                             TelefonePrimario: userDB.TelefonePrimario,
@@ -167,23 +161,50 @@ class User{
         }
     }
 
-    async update(request:Request, response:Response){
-        const {id} = request.params;                            //Recebe id do usuario
+    async updatePassword(request:Request, response:Response){           //Update Password
+        const {userId} = request.params;                            //Recebe id do usuario
         const {password, confirmPassword} = request.body;
-        const idInt = parseInt(id);
+        const userIdInt = parseInt(userId);
         if(!password || !confirmPassword){
-            return response.status(400).json({updatedUser: false, error: "Preencha todos os campos."});
+            return response.status(400).json({updatedUserPassword: false, error: "Preencha todos os campos."});
         }
         if(password === confirmPassword){                       //Verifica se as senhas informadas são iguais
             await bcrypt.hash(password, saltRounds, function(err, hash) {   //Efetua novamente o hash da senha
-                knex("Usuario").where("IdUsuario", idInt).update({          //Atualiza o valor da senha no DB
+                knex("Usuario").where("IdUsuario", userIdInt).update({          //Atualiza o valor da senha no DB
                     Senha: hash
                 }).then(() => {
-                    return response.status(200).json({updatedUser: true, hash})
+                    return response.status(200).json({updatedUserPassword: true})
                 })
             });
         }else{
-            return response.status(400).json({updatedUser: false, error: "Senhas não correspondentes."})
+            return response.status(400).json({updatedUserPassword: false, error: "Senhas não correspondentes."})
+        }
+    }
+
+    async updateUserType(request:Request, response:Response){           //Update Password
+        const {userId} = request.params;                            //Recebe id do usuario
+        const {userType} = request.body;
+        const userIdInt = parseInt(userId);
+        if(!userType){
+            return response.status(400).json({updatedUserType: false, error: "Preencha todos os campos."});
+        }
+        if(userType != "A" && userType != "P" && userType != "AL"){
+            return response.status(400).json({updatedUserType: false, error: "Tipo de usuário inválido. Tente novamente."});
+        }
+        try{
+            const userDB = await knex("Usuario").where("IdUsuario", userIdInt);
+            if(!userDB[0]){
+                return response.status(404).json({updatedUserType: false, error: "Usuário não encontrado. Tente novamente."});
+            }
+            await knex("Usuario").where("IdUsuario", userIdInt).update({          //Atualiza o valor da senha no DB
+                TipoUsuario: userType
+            }).then(() => {
+                return response.status(200).json({updatedUserType: true});
+            }).catch(err => {
+                return response.status(200).json({updatedUserType: false, error: "Não foi possível alterar o tipo de usuário. Tente novamente. Erro: " + err});
+            })
+        }catch(err){
+            return response.status(200).json({updatedUserType: false, error: err});
         }
     }
     

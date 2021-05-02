@@ -6,6 +6,7 @@ export async function up(knex: knex){
         table.string('Usuario').notNullable();
         table.string('Senha').notNullable();
         table.string('Nome').notNullable();
+        table.enum('TipoUsuario', ["A", "P", "AL"]).notNullable(); //Administrador, Professor, ALuno
         table.string('Email');
         table.string('DataNascimento');
         table.string('TelefonePrimario');

@@ -4,18 +4,23 @@ import knex from "../../database/connection";
 class Team{
     async create(request:Request, response:Response){
         const {nome, periodo} = request.body;
-        const idCiclo = request.params.idCycle;
+        const idCiclo = request.params.cycleId;
+        const idUsuario = request.params.userId;
         if(!nome || !periodo){
             return response.status(400).json({createdTeam: false, error: "Preecha todos os campos. Verifique e tente novamente."});
         }
         if(periodo != "M" && periodo != "T"){
             return response.status(400).json({createdTeam: false, error: "Formato de período inválido. Verifique e tente novamente."});
         }
-        if(!idCiclo){
-            return response.status(400).json({createdTeam: false, error: "Id do ciclo não fornecido. Tente novamente."});
+        if(!idCiclo || !idUsuario){
+            return response.status(400).json({createdTeam: false, error: "Id de usuário ou Id de ciclo não fornecido(s). Tente novamente."});
         }
 
         try{
+            const userDB = await knex("Usuario").where("IdUsuario", idUsuario);
+            if(!userDB[0]){
+                return response.status(400).json({createdTeam: false, error: `Usuário não encontrado. Tente novamente.`});
+            }
             await knex("Ciclo").where("IdCiclo", idCiclo).then(cycleDB => {
                 if(!cycleDB[0]){
                     return response.status(400).json({createdTeam: false, error: `Não foi possível encontrar um ciclo com id = ${idCiclo}.`});
@@ -29,7 +34,8 @@ class Team{
                         NomeTurma: nome,
                         Periodo: periodo,
                         DataCriacao: dataCriacaoFormated,
-                        IdCiclo: idCiclo
+                        IdCiclo: idCiclo,
+                        IdUsuario: idUsuario
                     }
                     knex("Turma").insert(team).then(teamDB => {
                         return response.status(200).json({createdTeam: true, teamId: teamDB[0]});
@@ -47,7 +53,7 @@ class Team{
         }
     }
 
-    async indexPaginate(request: Request, response: Response){
+    async indexPaginateAll(request: Request, response: Response){
         const { page } = request.params;
         var pageRequest = parseInt(page) / 10;
         const rows = 10;
@@ -62,11 +68,52 @@ class Team{
                         Periodo: teamDB.Periodo,
                         DataCriacao: teamDB.DataCriacao,
                         IdCiclo: teamDB.IdCiclo,
+                        IdUsuario: teamDB.IdUsuario,
                         QuantidadeAulas: 0
                     }
                 })
                 for(var i = 0; i < serializedTeams.length; i++){
                     const lessonLength = (await knex("Aula").count("IdTurma").where("IdTurma", serializedTeams[i].IdTurma));
+                    serializedTeams[i].QuantidadeAulas = Number(lessonLength[0]['count(`IdTurma`)'])
+                }
+                return response.status(200).json({
+                    showTeams: true,
+                    teams: serializedTeams,
+                    length: teamsLength,
+                });
+            } else {
+                return response.status(404).json({
+                    showTeams: false,
+                    error: "Turmas não encontradas. Verifique a página e tente novamente.",
+                });
+            }
+        } catch (err) {
+            return response.status(400).json({ showTeams: false, error: err });
+        }
+    }
+
+    async indexPaginateSpecific(request: Request, response: Response){
+        const { page } = request.params;
+        const idUsuario = request.params.userId;
+        var pageRequest = parseInt(page) / 10;
+        const rows = 10;
+        try {
+            const teams = await knex("Turma").select("*").where("IdUsuario", idUsuario).offset((pageRequest - 1) * rows).limit(rows);
+            console.log(teams)
+            const teamsLength = (await knex("Turma").select("*").where("IdUsuario", idUsuario)).length;
+            if (teams) {
+                var serializedTeams = teams.map(teamDB => {
+                    return {
+                        IdTurma: teamDB.IdTurma,
+                        Nome: teamDB.NomeTurma,
+                        Periodo: teamDB.Periodo,
+                        DataCriacao: teamDB.DataCriacao,
+                        IdCiclo: teamDB.IdCiclo,
+                        QuantidadeAulas: 0
+                    }
+                })
+                for(var i = 0; i < serializedTeams.length; i++){
+                    const lessonLength = (await knex("Aula").count("IdTurma").where({IdTurma: serializedTeams[i].IdTurma, IdUsuario: idUsuario}));
                     serializedTeams[i].QuantidadeAulas = Number(lessonLength[0]['count(`IdTurma`)'])
                 }
                 return response.status(200).json({

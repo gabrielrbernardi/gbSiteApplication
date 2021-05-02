@@ -6,6 +6,7 @@ export async function up(knex: knex){
         Usuario: 'administrador',
         Senha: '$2b$10$cRO5A5Crb/FSyZcN0i4EnuinyJUZbPrz5.zkv32jyPb7YEzNye8MC',
         Nome: "Administrador",
+        TipoUsuario: "A",
         DataCriacao: "2021-04-25",
         UltimoAcesso: null
     })

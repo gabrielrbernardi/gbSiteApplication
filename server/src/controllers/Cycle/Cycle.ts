@@ -40,10 +40,10 @@ class Cycle{
         }
     }
 
-    async index(request: Request, response: Response){
-        const cycles = await knex("Ciclo").select("*");
-        return response.status(200).json({showCycles: true, cycles});
-    }
+    // async index(request: Request, response: Response){
+    //     const cycles = await knex("Ciclo").select("*");
+    //     return response.status(200).json({showCycles: true, cycles});
+    // }
 
     async indexPaginate(request:Request, response:Response){
         const { page } = request.params;

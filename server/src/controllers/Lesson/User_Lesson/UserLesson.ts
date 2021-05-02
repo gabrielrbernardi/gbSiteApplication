@@ -21,7 +21,9 @@ class UserLesson{
         if(!userDB){
             return response.status(404).json({registeredUser: false, error: "Usuário não encontrado. Tente novamente."});
         }
-        
+        if(userDB.TipoUsuario == "A" || userDB.TipoUsuario == "P"){
+            return response.status(400).json({registeredUser: false, error: "Administradores ou professores não podem se cadastrar na aula."});
+        }
         if(lessonDB.Status === "F"){
             return response.status(400).json({registeredUser: false, error: "Aula não foi aberta. Entre em contato com o professor."});
         }
