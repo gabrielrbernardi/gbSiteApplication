@@ -34,7 +34,7 @@ class User{
         const user = userDB[0];
         var dataCriacao = new Date().toISOString().split("T");
         dataCriacao[1] = dataCriacao[1].split(".")[0];
-        var newData = dataCriacao[0].split("-")
+        var newData = dataCriacao[0].split("-");
         var dataCriacaoFormated = newData[2] + "/" + newData[1] + "/" + newData[0] + " " + dataCriacao[1];
         
         if(!user){
@@ -56,13 +56,13 @@ class User{
                         createdUser: true,
                         id: userId,
                         // Usuario: username
-                    })
+                    });
                 }).catch(err => {
-                    return response.status(400).json({createdUser: false, error: "Erro na inserção dos valores. Verifique os dados e tente novamente." + " Error Type: " + err.code});
+                    return response.status(400).json({createdUser: false, error: "Erro na inserção dos valores. Verifique os dados e tente novamente. Error Type: " + err.code});
                 })
             });
         }else{
-            return response.status(401).json({createdUser: false, error: "Usuário existente. Tente novamente."})
+            return response.status(401).json({createdUser: false, error: "Usuário existente. Tente novamente."});
         }
     }
 
@@ -137,7 +137,7 @@ class User{
                             DataCriacao: userDB.DataCriacao,
                             UltimoAcesso: userDB.UltimoAcesso,
                         }
-                    })
+                    });
                     return response.status(200).json({
                         showUsers: true,
                         users: serializedUsers,
@@ -173,11 +173,11 @@ class User{
                 knex("Usuario").where("IdUsuario", userIdInt).update({          //Atualiza o valor da senha no DB
                     Senha: hash
                 }).then(() => {
-                    return response.status(200).json({updatedUserPassword: true})
+                    return response.status(200).json({updatedUserPassword: true});
                 })
             });
         }else{
-            return response.status(400).json({updatedUserPassword: false, error: "Senhas não correspondentes."})
+            return response.status(400).json({updatedUserPassword: false, error: "Senhas não correspondentes."});
         }
     }
 
@@ -202,7 +202,7 @@ class User{
                 return response.status(200).json({updatedUserType: true});
             }).catch(err => {
                 return response.status(200).json({updatedUserType: false, error: "Não foi possível alterar o tipo de usuário. Tente novamente. Erro: " + err});
-            })
+            });
         }catch(err){
             return response.status(200).json({updatedUserType: false, error: err});
         }
