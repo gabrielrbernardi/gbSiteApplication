@@ -1,65 +1,50 @@
+require('dotenv').config({ path: "./src/environment.env" });
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import routes from './routes';
 import Middleware from './middleware';
-
-import jwt from 'jsonwebtoken';
 
 const app: Express = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
-// const middleware = new Middleware();
+const middleware = new Middleware();
 
-app.use(middleware);
+// app.use(middleware);
+app.use(middleware.authenticateToken);
 app.use(routes);
 
 let port = 3333;
 console.log("Running on: " + port);
 app.listen(process.env.PORT || port);
-setToken();
+// setToken();
 
 var token:any;
 
-setInterval(function() {
-    setToken();
-}, 3000);
+// function authenticateToken(request: Request, response: Response, next: NextFunction){
+//     try {
+//         if((request.method === "POST" && request.url === "/users/login") || (request.method === "POST" && request.url === "/users")){
+//             next()
+//         }else{
+//             const authHeader = request.headers['authorization'];
+//             const token = authHeader && authHeader.split(' ')[1];
+//             if(!token){
+//                 throw "Token não fornecido!";
+//             }
+//             jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, user) => {
+//                 if(err){
+//                     return response.status(403).json({ error: "Token fornecido inválido!"});
+//                 }
+//                 next();
+//             })
+//         }
+//     } catch (error) {
+//         return response.status(401).json({ error: "Erro na execução! " + error });
+//     }
+// }
 
-function middleware(request: Request, response: Response, next: NextFunction){
-    console.log("passou aqui")
-    console.log(getToken());
-    const tokenHeader = request.headers.token;
-    const usernameHeader = request.headers.username;
-    next()
-    // console.log(new Date());
-    // if((request.method === "POST" && request.url === "/users/login") || (request.method === "POST" && request.url === "/users")){
-    //     next()
-    // }else if(request.headers.token){
-    //     let token: any = request.headers.token;
-    //     let dataAtual = new Date();
-    //     let dateToken = new Date();
-    //     console.log(request.headers.token)
-    //     console.log(dataAtual.getTime())
-    //     if(dataAtual > token){
-    //         return response.status(511).json({error: "Acesso Negado. Token de acesso expirado. Faça login novamente!"});
-    //     }
-    //     next()
-    // }else{
-    //     return response.status(511).json({error: "Acesso Negado. Não existe token de acesso."});
-    // }
-}
-
-function getToken(){
-    return token;
-}
-
-function setToken(){
-    token = jwt.sign(
-        {
-            systemName: "gbSiteApplication"
-        },
-        'shhhhh'
-    );
-    console.log("Token Gerado")
-}
+// function generateAccesToken(user: string){
+//     //@ts-ignore
+//     return  jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15s'});
+// }
