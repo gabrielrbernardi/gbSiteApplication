@@ -20,7 +20,7 @@ class UserSession {
                     if(err){
                         return response.status(400).json({ userLogin: false, error: err });
                     }else if(!result){
-                        return response.status(400).json({ userLogin: false, error: "Senha incorreta." });
+                        return response.status(400).json({ userLogin: false, error: "Usuário ou senha incorrretos." });
                     }else{                    
                         let dataFormat = (new Date()).toISOString().split("T");
                         let dataAtualVector = dataFormat[0].split("-");
@@ -31,7 +31,8 @@ class UserSession {
                         
                         const userData = {
                             IdUsuario: userDB[0].IdUsuario,
-                            Usuario: userDB[0].Usuario
+                            Usuario: userDB[0].Usuario,
+                            NomeUsuario: userDB[0].Nome
                         }
                         
                         const accessToken = Middleware.generateAccessToken(userData.Usuario)
@@ -53,7 +54,7 @@ class UserSession {
                     }
                 })
             }else{
-                return response.status(404).json({ userLogin: false, error: "Usuário não encontrado." });
+                return response.status(404).json({ userLogin: false, error: "Usuário ou senha incorrretos." });
             }
         }catch(error){
             console.log(error)

@@ -10,7 +10,7 @@ export async function up(knex: knex){
         table.string('Email');
         table.string('DataNascimento');
         table.string('TelefonePrimario');
-        table.string('TelefoneSecondario');
+        table.string('TelefoneSecundario');
         table.dateTime('UltimoAcesso', {precision: 6}).nullable;
         table.date('DataCriacao').notNullable();
     })

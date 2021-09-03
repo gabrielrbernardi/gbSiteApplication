@@ -17,7 +17,7 @@ class Cycle{
             
             var cicloFormated = parseInt(ciclo);
             if(ano > anoMaximo || ano < anoMinimo){
-                return response.status(400).json({createdCycle: false, error: "Ano inválido. Ano deve estar entre ${anoMinimo} e ${anoMaximo}. Tente novamente."});
+                return response.status(400).json({createdCycle: false, error: `Ano inválido. Ano deve estar entre ${anoMinimo} e ${anoMaximo}. Tente novamente.`});
             }
 
             const cicloObject = {

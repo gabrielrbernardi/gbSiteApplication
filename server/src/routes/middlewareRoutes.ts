@@ -6,7 +6,7 @@ const routes = express.Router();
 const middleware = new Middleware();
 
 routes.post("/token", middleware.getRefreshToken);
-routes.delete("/token", middleware.deleteRefreshToken);
+routes.post("/logout", middleware.deleteRefreshToken);
 
 
 export default routes;

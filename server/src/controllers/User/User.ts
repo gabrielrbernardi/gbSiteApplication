@@ -12,7 +12,7 @@ class User{
         const Email = request.body.email || null;
         const DataNascimento = request.body.dataNascimento || null;
         const TelefonePrimario = request.body.telefonePrimario || null;
-        const TelefoneSecondario = request.body.telefoneSecondario || null;
+        const TelefoneSecundario = request.body.telefoneSecundario || null;
         
         if(!username || !password || !confirmPassword || !name){                     //Verifica se username, password e confirmPassword sao validos
             return response.status(400).json({createdUser: false, error: "Preencha todos os campos!"});
@@ -47,7 +47,7 @@ class User{
                     Email,
                     DataNascimento,
                     TelefonePrimario,
-                    TelefoneSecondario,
+                    TelefoneSecundario,
                     DataCriacao: dataCriacaoFormated
                 };
                 knex("Usuario").insert(user).then(users => {
@@ -88,7 +88,7 @@ class User{
                         Email: userDB.Email,
                         DataNascimento: userDB.DataNascimento,
                         TelefonePrimario: userDB.TelefonePrimario,
-                        TelefoneSecondario: userDB.TelefoneSecondario,
+                        TelefoneSecundario: userDB.TelefoneSecundario,
                         DataCriacao: userDB.DataCriacao,
                         UltimoAcesso: userDB.UltimoAcesso,
                     }
@@ -133,7 +133,7 @@ class User{
                             Email: userDB.Email,
                             DataNascimento: userDB.DataNascimento,
                             TelefonePrimario: userDB.TelefonePrimario,
-                            TelefoneSecondario: userDB.TelefoneSecondario,
+                            TelefoneSecundario: userDB.TelefoneSecundario,
                             DataCriacao: userDB.DataCriacao,
                             UltimoAcesso: userDB.UltimoAcesso,
                         }
